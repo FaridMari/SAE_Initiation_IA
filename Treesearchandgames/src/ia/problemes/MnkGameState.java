@@ -48,9 +48,86 @@ public class MnkGameState extends AbstractMnkGameState {
      * @return la valeur du jeux
      **/
     protected double evaluationFunction() {
-        return Double.NaN;
-    }
-    
+        int maxScore = evaluatePlayer(1); // Score du joueur MAX (X)
+        int minScore = evaluatePlayer(2); // Score du joueur MIN (O)
 
-    
+        return maxScore - minScore; // Alpha-Beta maximise pour MAX et minimise pour MIN
+    }
+
+    /**
+     * Évalue les opportunités du joueur donné dans l'état actuel du jeu.
+     * On attribue un score basé sur les lignes ouvertes et les menaces.
+     */
+    private int evaluatePlayer(int player) {
+        int score = 0;
+
+        // Vérification des lignes gagnantes potentielles (lignes, colonnes, diagonales)
+        for (int[] line : getAllPossibleLines()) {
+            int countPlayer = 0;
+            int countEmpty = 0;
+
+            for (int cell : line) {
+                if (cell == player) countPlayer++;
+                else if (cell == 0) countEmpty++;
+            }
+
+            if (countPlayer == streak - 1 && countEmpty == 1) {
+                score += 100; // Menace immédiate
+            } else if (countPlayer == streak - 2 && countEmpty == 2) {
+                score += 10; // Bonne position pour l’avenir
+            } else if (countPlayer == streak - 3 && countEmpty == 3) {
+                score += 3; // Opportunité à long terme
+            }
+        }
+
+        return score;
+    }
+
+    /**
+     * Récupère toutes les lignes, colonnes et diagonales du plateau.
+     */
+    private ArrayList<int[]> getAllPossibleLines() {
+        ArrayList<int[]> lines = new ArrayList<>();
+
+        // Parcours lignes et colonnes
+        for (int i = 0; i < rows; i++) {
+            int[] row = new int[cols];
+            int[] col = new int[rows];
+            for (int j = 0; j < cols; j++) {
+                row[j] = board[i * cols + j]; // Ligne
+                col[j] = board[j * cols + i]; // Colonne
+            }
+            lines.add(row);
+            lines.add(col);
+        }
+
+        // Parcours diagonales
+        lines.addAll(getDiagonals());
+
+        return lines;
+    }
+
+    /**
+     * Récupère toutes les diagonales du plateau.
+     */
+    private ArrayList<int[]> getDiagonals() {
+        ArrayList<int[]> diagonals = new ArrayList<>();
+
+        for (int i = 0; i <= rows - streak; i++) {
+            for (int j = 0; j <= cols - streak; j++) {
+                int[] diag1 = new int[streak];
+                int[] diag2 = new int[streak];
+                for (int k = 0; k < streak; k++) {
+                    diag1[k] = board[(i + k) * cols + (j + k)];
+                    diag2[k] = board[(i + k) * cols + (j + streak - 1 - k)];
+                }
+                diagonals.add(diag1);
+                diagonals.add(diag2);
+            }
+        }
+        return diagonals;
+    }
+
+
+
 }
